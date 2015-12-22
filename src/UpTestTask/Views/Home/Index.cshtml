@@ -4,21 +4,24 @@
     ViewData["Title"] = "Home";
 }
 
-<form asp-controller="HomeController" asp-action="Index" method="get">
-    <p>
-        <input type="text" name="SearchString">
-        <input type="submit" value="Search" />
-    </p>
-</form>
+<div class="body-content">
+    <form asp-controller="HomeController" asp-action="Index" method="get">
+        <p>
+            <input type="text" name="SearchString">
+            <input type="submit" value="Search" />
+        </p>
+    </form>
 
-@{
-    if (Model.Count > 0)
-    {
-        foreach (var item in Model)
+    @{
+        if (Model.Count > 0)
         {
-            string key = item.Key;
-            string value = item.Value;
-            @Html.Raw("<li>" + key + ", " + value + "</li>");
+            foreach (var item in Model)
+            {
+                string key = item.Key;
+                string value = item.Value;
+                @Html.Raw("<li>" + key + ", " + value + "</li>");
+            }
         }
     }
-}
+
+</div>
