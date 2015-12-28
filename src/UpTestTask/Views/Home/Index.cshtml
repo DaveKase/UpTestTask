@@ -1,11 +1,10 @@
-﻿@model Dictionary<string, string>
-@using Newtonsoft.Json
+﻿@using Newtonsoft.Json
 
 @{
     ViewData["Title"] = "Home";
 }
 
-<div class="body-content">
+<div class="searchForm">
     <form>
         <p>
             <input type="text" name="SearchString" id="searchString">
@@ -14,13 +13,22 @@
     </form>
 </div>
 
+<div class="list">
+</div>
+
 <script>
     function getAjaxData() {
         var text = $("#searchString").val();
         console.log("getAjaxData called with text " + text);
-        $.get('/Amazon?SearchString=' + text,
-            function (response) {
-                console.log(response);
-            }
-        )};
+
+        $.getJSON('/Amazon?SearchString=' + text, function (data) {
+            $.each(data, function (index, value) {
+
+                var title = value.title;
+                var price = value.price;
+                console.log("title = " + title + ", price = " + price);
+                $(".list").append("<li>" + title + ", " + price + "</li>");
+            });
+        });
+    }
 </script>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography;
@@ -24,7 +25,7 @@ namespace UpTestTask.Controllers
         private byte[] _secret;
         private HMAC _signer;
 
-        public AmazonApi(string accessKey, string secretKey, string destination) 
+        public AmazonApi(string accessKey, string secretKey, string destination)
         {
             _accessKey = accessKey;
             _secretKey = secretKey;
@@ -34,49 +35,56 @@ namespace UpTestTask.Controllers
             _secret = Encoding.UTF8.GetBytes(_secretKey);
             _signer = new HMACSHA256(this._secret);
         }
-        
+
         public string Sign(string queryString)
         {
             IDictionary<string, string> request = this.CreateDictionary(queryString);
             return Sign(request);
         }
 
-        public Dictionary<string, string> GetData(string url)
+        public JArray GetData(string url)
         {
-            Dictionary<string, string> titleAndPriceDict = new Dictionary<string, string>();
-
             try
             {
+                JArray jArray = new JArray();
                 XmlDocument doc = GetXmlDoc(url);
                 XmlNodeList errorMessageNodes = doc.GetElementsByTagName("Message", NAMESPACE);
 
                 if (errorMessageNodes != null && errorMessageNodes.Count > 0)
                 {
+                    JObject jObject = new JObject();
                     String message = errorMessageNodes.Item(0).InnerText;
-                    titleAndPriceDict.Add("Error", message + " (but signature worked)");
-                    return titleAndPriceDict;
+                    jObject.Add("Error", message + " (but signature worked)");
+                    jArray.Add(jObject);
+                    return jArray;
                 }
 
                 XmlNodeList titleNodes = doc.GetElementsByTagName("Title", NAMESPACE);
                 XmlNodeList priceNodes = doc.GetElementsByTagName("FormattedPrice", NAMESPACE);
-                List<string> titleList = CreateTitleList(titleNodes);
-                List<string> priceList = CreatePriceList(priceNodes);
-                
+
                 for (int i = 0; i < titleNodes.Count; i++)
                 {
-                    if (!titleAndPriceDict.ContainsKey(titleList[i]))
-                    {
-                        titleAndPriceDict.Add(titleList[i], priceList[i]);
-                    }
+                    XmlNode titleNode = titleNodes[i];
+                    XmlNode priceNode = priceNodes[i];
+                    string title = titleNode.InnerXml;
+                    string price = priceNode.InnerXml;
+
+                    JObject jObject = new JObject();
+                    jObject.Add("title", title);
+                    jObject.Add("price", price);
+                    jArray.Add(jObject);
                 }
 
-                return titleAndPriceDict;
+                return jArray;
             }
             catch (Exception e)
             {
-                titleAndPriceDict = new Dictionary<string, string>();
-                titleAndPriceDict.Add("Error", e.Message + " " + e.StackTrace);
-                return titleAndPriceDict;
+                JObject jObject = new JObject();
+                jObject.Add("Error", e.Message + " " + e.StackTrace);
+
+                JArray jArray = new JArray();
+                jArray.Add(jObject);
+                return jArray;
             }
         }
 
@@ -84,22 +92,22 @@ namespace UpTestTask.Controllers
         {
             ParamComparer pc = new ParamComparer();
             SortedDictionary<string, string> sortedMap = new SortedDictionary<string, string>(request, pc);
-            
+
             sortedMap["AWSAccessKeyId"] = _accessKey;
             sortedMap["Timestamp"] = GetTimestamp();
-            
+
             string canonicalQS = ConstructCanonicalQueryString(sortedMap);
-            
+
             StringBuilder builder = new StringBuilder();
             builder.Append(REQUEST_METHOD).Append("\n").Append(_endPoint).Append("\n")
                 .Append(REQUEST_URI).Append("\n").Append(canonicalQS);
 
             string stringToSign = builder.ToString();
             byte[] toSign = Encoding.UTF8.GetBytes(stringToSign);
-            
+
             byte[] sigBytes = _signer.ComputeHash(toSign);
             string signature = Convert.ToBase64String(sigBytes);
-            
+
             StringBuilder qsBuilder = new StringBuilder();
             qsBuilder.Append("http://").Append(_endPoint).Append(REQUEST_URI).Append("?").Append(canonicalQS)
                 .Append("&Signature=").Append(PercentEncodeRfc3986(signature));
@@ -216,32 +224,6 @@ namespace UpTestTask.Controllers
             doc.Load(response.GetResponseStream());
 
             return doc;
-        }
-
-        private List<string> CreateTitleList(XmlNodeList titleNodes)
-        {
-            List<string> titleList = new List<string>();
-
-            foreach (XmlNode node in titleNodes)
-            {
-                string titleNode = node.InnerXml;
-                titleList.Add(titleNode);
-            }
-
-            return titleList;
-        }
-
-        private List<string> CreatePriceList(XmlNodeList priceNodes)
-        {
-            List<string> pricesList = new List<string>();
-
-            foreach (XmlNode node in priceNodes)
-            {
-                string price = node.InnerXml;
-                pricesList.Add(price);
-            }
-
-            return pricesList;
         }
     }
 
