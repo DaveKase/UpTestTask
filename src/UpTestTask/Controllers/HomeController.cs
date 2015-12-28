@@ -8,11 +8,12 @@ namespace UpTestTask.Controllers
     public class HomeController : Controller
     {
         public List<string> titleList;
+        private Dictionary<string, string> titlePriceDict;
 
         public IActionResult Index(string searchString)
         {
-            Dictionary<string, string> titleList = MakeAmazonQuery(searchString);
-            return View(titleList);
+            titlePriceDict = MakeAmazonQuery(searchString);
+            return View(titlePriceDict);
         }
 
         private Dictionary<string, string> MakeAmazonQuery(string searchString)
@@ -38,7 +39,8 @@ namespace UpTestTask.Controllers
 
             AmazonApi amazon = new AmazonApi(accessKey, secretKey, destination);
             string requestUrl = amazon.Sign(requestString);
-            return amazon.GetData(requestUrl);
+            titlePriceDict = amazon.GetData(requestUrl);
+            return titlePriceDict;
         }
 
         private JObject GetKeys()
@@ -48,6 +50,22 @@ namespace UpTestTask.Controllers
 
             JObject jObject = JObject.Parse(jsonString);
             return jObject;
+        }
+
+        public JArray GetJson()
+        {
+            JArray jArray = new JArray();
+
+            foreach (string key in titlePriceDict.Keys)
+            {
+                string price = titlePriceDict[key];
+                JObject jObject = new JObject();
+                jObject.Add("title", key);
+                jObject.Add("price", price);
+                jArray.Add(jObject);
+            }
+
+            return jArray;
         }
     }
 }

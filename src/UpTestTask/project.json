@@ -1,11 +1,12 @@
 {
   "userSecretsId": "aspnet5-UpTestTask-fed563c1-ad6b-4f41-94f2-703df1db1726",
-  "version": "1.0.0-*",
+  "version": "1.1.0",
   "compilationOptions": {
     "emitEntryPoint": true
   },
 
   "dependencies": {
+    "jQuery":"2.1.4",
     "EntityFramework.Commands": "7.0.0-rc1-final",
     "EntityFramework.MicrosoftSqlServer": "7.0.0-rc1-final",
     "Microsoft.ApplicationInsights.AspNet": "1.0.0-rc1",
