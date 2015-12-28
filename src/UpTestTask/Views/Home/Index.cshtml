@@ -17,18 +17,28 @@
 </div>
 
 <script>
+    var oldText = "";
+
     function getAjaxData() {
         var text = $("#searchString").val();
-        console.log("getAjaxData called with text " + text);
+        if (oldText === "") {
+            oldText = text;
+        } else if (oldText != text) {
+            $(".list").empty();
+        }
 
         $.getJSON('/Amazon?SearchString=' + text, function (data) {
             $.each(data, function (index, value) {
-
                 var title = value.title;
                 var price = value.price;
-                console.log("title = " + title + ", price = " + price);
-                $(".list").append("<li>" + title + ", " + price + "</li>");
+                $(".list").append("<li>" + (index + 1) + ". " + title + ", " + price + "</li>");
             });
+            
+            $(".list").append("<input type='button' value='Load More' onclick='loadMore()' />");
         });
+    }
+
+    function loadMore() {
+        
     }
 </script>
