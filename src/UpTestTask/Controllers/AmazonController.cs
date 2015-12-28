@@ -6,11 +6,12 @@ namespace UpTestTask.Controllers
 {
     public class AmazonController : Controller
     {
-        
+        JArray jQueryResult = new JArray();
+
         public JArray Index(string searchString)
         {
-            JArray jArray = MakeAmazonQuery(searchString);
-            return jArray;
+            jQueryResult = MakeAmazonQuery(searchString);
+            return jQueryResult;
         }
 
         private JArray MakeAmazonQuery(string searchString)
@@ -47,6 +48,18 @@ namespace UpTestTask.Controllers
 
             JObject jObject = JObject.Parse(jsonString);
             return jObject;
+        }
+
+        public JArray ChangeCurrency(string oldCurrency, string newCurrency)
+        {
+            JArray jArray;
+
+            foreach(JObject jObject in jQueryResult)
+            {
+
+            }
+
+            return jQueryResult;
         }
     }
 }

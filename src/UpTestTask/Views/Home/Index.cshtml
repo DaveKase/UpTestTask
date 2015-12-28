@@ -20,6 +20,12 @@
     var oldText = "";
 
     function getAjaxData() {
+        var dropDown = "Currency: "
+            + "<select id='dropdown' onchange='currencyChanged()'><option value='1'>GBP</option>"
+            + "<option value='2'>EUR</option>"
+            + "<option value='3'>USD</option></select>";
+        
+
         var text = $("#searchString").val();
         if (oldText === "") {
             oldText = text;
@@ -33,12 +39,25 @@
                 var price = value.price;
                 $(".list").append("<li>" + (index + 1) + ". " + title + ", " + price + "</li>");
             });
-            
+
+            $(".searchForm").append(dropDown);
             $(".list").append("<input type='button' value='Load More' onclick='loadMore()' />");
         });
     }
 
     function loadMore() {
-        
+        console.log("Should load more results, but don't know Amazon well enough");
+    }
+
+    function currencyChanged() {
+        var oldCurr = 0;
+        var newCurr = document.getElementById("dropdown").value;
+        console.log("changed to " + newCurr);
+
+        $.getJSON('/Amazon/ChangeCurrency?oldCurrency=0&newCurrency=1', function (data) {
+            $.each(data, function (index, value) {
+                console.log(value);
+            });
+        });
     }
 </script>
