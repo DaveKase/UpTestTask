@@ -68,6 +68,7 @@ namespace UpTestTask.Controllers
                     XmlNode priceNode = priceNodes[i];
                     string title = titleNode.InnerXml;
                     string price = priceNode.InnerXml;
+                    price = price.Replace("£", "P");
 
                     JObject jObject = new JObject();
                     jObject.Add("title", title);

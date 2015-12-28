@@ -9,6 +9,12 @@
         <p>
             <input type="text" name="SearchString" id="searchString">
             <input type="button" value="Search" onclick="getAjaxData()" />
+            Currency:
+            <select id='dropdown' onchange='currencyChanged()'>
+                <option value='0'>GBP</option>
+                <option value='1'>EUR</option>
+                <option value='2'>USD</option>
+            </select>
         </p>
     </form>
 </div>
@@ -18,29 +24,35 @@
 
 <script>
     var oldText = "";
+    var oldCurr = 0;
+    var json;
 
     function getAjaxData() {
-        var dropDown = "Currency: "
-            + "<select id='dropdown' onchange='currencyChanged()'><option value='1'>GBP</option>"
-            + "<option value='2'>EUR</option>"
-            + "<option value='3'>USD</option></select>";
-        
-
         var text = $("#searchString").val();
-        if (oldText === "") {
+        if (text == "") {
+            return;
+        } else if (oldText === "") {
             oldText = text;
         } else if (oldText != text) {
             $(".list").empty();
+            oldText = text;
+        } else if (text == "") {
+            return;
+        } else {
+            return
         }
 
-        $.getJSON('/Amazon?SearchString=' + text, function (data) {
+        var dropdown = document.getElementById("dropdown");
+        dropdown.value = 0;
+
+        $.getJSON('/Amazon?SearchString=' + text + '&oldCurrency=0&newCurrency=0', function (data) {
             $.each(data, function (index, value) {
                 var title = value.title;
                 var price = value.price;
                 $(".list").append("<li>" + (index + 1) + ". " + title + ", " + price + "</li>");
             });
 
-            $(".searchForm").append(dropDown);
+            json = JSON.stringify(data);
             $(".list").append("<input type='button' value='Load More' onclick='loadMore()' />");
         });
     }
@@ -50,14 +62,21 @@
     }
 
     function currencyChanged() {
-        var oldCurr = 0;
+        var text = $("#searchString").val();
         var newCurr = document.getElementById("dropdown").value;
-        console.log("changed to " + newCurr);
 
-        $.getJSON('/Amazon/ChangeCurrency?oldCurrency=0&newCurrency=1', function (data) {
+        $.getJSON('/Amazon/ChangeCurrency?resultString=' + json + '&oldCurrency=' + oldCurr
+            + '&newCurrency=' + newCurr, function (data) {
+
+            $(".list").empty();
+
             $.each(data, function (index, value) {
-                console.log(value);
+                var title = value.title;
+                var price = value.price;
+                $(".list").append("<li>" + (index + 1) + ". " + title + ", " + price + "</li>");
             });
         });
+
+        oldCurr = newCurr;
     }
 </script>

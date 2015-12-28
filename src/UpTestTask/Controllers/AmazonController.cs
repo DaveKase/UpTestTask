@@ -6,15 +6,14 @@ namespace UpTestTask.Controllers
 {
     public class AmazonController : Controller
     {
-        JArray jQueryResult = new JArray();
 
-        public JArray Index(string searchString)
+        public JArray Index(string searchString, string oldCurrency, string newCurrency)
         {
-            jQueryResult = MakeAmazonQuery(searchString);
-            return jQueryResult;
+            JArray jArray = MakeAmazonQuery(searchString, oldCurrency, newCurrency);
+            return jArray;
         }
 
-        private JArray MakeAmazonQuery(string searchString)
+        private JArray MakeAmazonQuery(string searchString, string oldCurrency, string newCurrency)
         {
             if (String.IsNullOrEmpty(searchString))
             {
@@ -38,6 +37,7 @@ namespace UpTestTask.Controllers
             AmazonApi amazon = new AmazonApi(accessKey, secretKey, destination);
             string requestUrl = amazon.Sign(requestString);
             JArray jArray = amazon.GetData(requestUrl);
+            
             return jArray;
         }
 
@@ -50,16 +50,68 @@ namespace UpTestTask.Controllers
             return jObject;
         }
 
-        public JArray ChangeCurrency(string oldCurrency, string newCurrency)
+        public JArray ChangeCurrency(string resultString, string oldCurrency, string newCurrency)
         {
-            JArray jArray;
+            JArray jQueryResult = JArray.Parse(resultString);
+            JArray jArray = new JArray();
 
             foreach(JObject jObject in jQueryResult)
             {
+                string title = jObject.GetValue("title").ToString();
+                string price = jObject.GetValue("price").ToString();
+                
+                if (int.Parse(oldCurrency) == 0 && int.Parse(newCurrency) == 1)
+                {
+                    JObject newJObject = ChangePrice(price, title, 1.36, "E");
+                    jArray.Add(newJObject);
+                }
 
+                else if (int.Parse(oldCurrency) == 0 && int.Parse(newCurrency) == 2)
+                {
+                    JObject newJObject = ChangePrice(price, title, 1.49, "S");
+                    jArray.Add(newJObject);
+                }
+
+                else if (int.Parse(oldCurrency) == 1 && int.Parse(newCurrency) == 2)
+                {
+                    JObject newJObject = ChangePrice(price, title, 1.49, "S");
+                    jArray.Add(newJObject);
+                }
+
+                else if (int.Parse(oldCurrency) == 2 && int.Parse(newCurrency) == 1)
+                {
+                    JObject newJObject = ChangePrice(price, title, 1.36, "E");
+                    jArray.Add(newJObject);
+                }
+
+                else if (int.Parse(oldCurrency) == 2 && int.Parse(newCurrency) == 0)
+                {
+                    JObject newJObject = ChangePrice(price, title, 1, "P");
+                    jArray.Add(newJObject);
+                }
+
+                else if (int.Parse(oldCurrency) == 1 && int.Parse(newCurrency) == 0)
+                {
+                    JObject newJObject = ChangePrice(price, title, 1, "P");
+                    jArray.Add(newJObject);
+                }
             }
 
-            return jQueryResult;
+            return jArray;
+        }
+
+        private JObject ChangePrice(string price, string title, double multiplier, string currency)
+        {
+            string priceStr = price.Remove(0, 1);
+            double priceVal = double.Parse(priceStr, System.Globalization.NumberStyles.Currency);
+            double newPrice = priceVal * multiplier;
+            newPrice = Math.Round(newPrice, 2);
+            string newPriceStr = currency + newPrice;
+            newPriceStr = newPriceStr.Replace(",", ".");
+            JObject newJObject = new JObject();
+            newJObject.Add("title", title);
+            newJObject.Add("price", newPriceStr);
+            return newJObject;
         }
     }
 }
